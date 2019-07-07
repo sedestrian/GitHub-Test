@@ -42,8 +42,16 @@ dependencies {
 
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
 
+    implementation "org.koin:koin-core:$koin_version"
+    implementation "org.koin:koin-core-ext:$koin_version"
+    implementation "org.koin:koin-android:$koin_version"
+    implementation "org.koin:koin-androidx-scope:$koin_version"
+    implementation "org.koin:koin-androidx-viewmodel:$koin_version"
+    implementation "org.koin:koin-androidx-ext:$koin_version"
+
     testImplementation "androidx.room:room-testing:$room_version"
     testImplementation "androidx.arch.core:core-testing:$lifecycle_version"
+    testImplementation "org.koin:koin-test:$koin_version"
     testImplementation "com.squareup.okhttp3:mockwebserver:4.0.0"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'

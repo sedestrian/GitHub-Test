@@ -1,0 +1,27 @@
+{
+  "total_count": 1,
+  "incomplete_results": false,
+  "items": [
+    {
+      "login": "sedestrian",
+      "id": 1345755,
+      "node_id": "MDQ6VXNlcjEzNDU3NTU=",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1345755?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/sedestrian",
+      "html_url": "https://github.com/sedestrian",
+      "followers_url": "https://api.github.com/users/sedestrian/followers",
+      "following_url": "https://api.github.com/users/sedestrian/following{/other_user}",
+      "gists_url": "https://api.github.com/users/sedestrian/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/sedestrian/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/sedestrian/subscriptions",
+      "organizations_url": "https://api.github.com/users/sedestrian/orgs",
+      "repos_url": "https://api.github.com/users/sedestrian/repos",
+      "events_url": "https://api.github.com/users/sedestrian/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/sedestrian/received_events",
+      "type": "User",
+      "site_admin": false,
+      "score": 56.74153
+    }
+  ]
+}
