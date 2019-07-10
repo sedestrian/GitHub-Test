@@ -2,36 +2,103 @@ package com.gaboardi.githubtest.view.usersquery
 
 
 import android.os.Bundle
-import android.os.Handler
-import androidx.fragment.app.Fragment
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.GridLayoutManager
-
+import android.view.inputmethod.EditorInfo
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
+import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.users.UsersAdapter
+import com.gaboardi.githubtest.databinding.FragmentUsersQueryBinding
+import com.gaboardi.githubtest.model.base.Status
+import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.SpacingItemDecorator
-import com.gaboardi.githubtest.util.dp
+import com.gaboardi.githubtest.util.dismissKeyboard
 import com.gaboardi.githubtest.util.px
-import kotlinx.android.synthetic.main.fragment_users_query.*
+import com.gaboardi.githubtest.viewmodel.usersquery.UsersQueryViewModel
+import org.koin.android.ext.android.bind
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class UsersQueryFragment : Fragment() {
+    private val usersViewModel: UsersQueryViewModel by viewModel()
+    private lateinit var binding: FragmentUsersQueryBinding
+    private lateinit var usersAdapter: UsersAdapter
+
+    private val appExecutors: AppExecutors by inject()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_users_query, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_users_query, container, false)
+        binding.lifecycleOwner = this
+        binding.viewModel = usersViewModel
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        usersRecycler.adapter = UsersAdapter()
-        usersRecycler.addItemDecoration(SpacingItemDecorator(16.px, 16.px))
-        usersRecycler.setLayoutReference(R.layout.shimmer_user_item)
-        usersRecycler.shimmer()
-        Handler().postDelayed({usersRecycler.stopShimmering()}, 5000)
+        usersAdapter = UsersAdapter(appExecutors) {
+
+        }
+        binding.usersRecycler.adapter = usersAdapter
+        binding.usersRecycler.addItemDecoration(SpacingItemDecorator(16.px, 16.px))
+        binding.usersRecycler.setLayoutReference(R.layout.shimmer_user_item)
+        observe()
+        react()
+    }
+
+    private fun observe() {
+        usersViewModel.results.observe(this, Observer {
+            when (it.status) {
+                Status.LOADING -> {
+                    binding.usersRecycler.isVisible = true
+                    binding.lottie.isGone = true
+                    binding.usersRecycler.shimmer()
+                }
+                Status.ERROR -> {
+                    binding.usersRecycler.stopShimmering()
+                    binding.usersRecycler.isGone = true
+                    binding.lottie.isVisible = true
+                }
+                Status.SUCCESS -> {
+                    binding.usersRecycler.isVisible = true
+                    binding.lottie.isGone = true
+                    usersAdapter.submitList(it.data!!)
+                    binding.usersRecycler.stopShimmering()
+                }
+            }
+        })
+    }
+
+    private fun react() {
+        binding.query.setOnEditorActionListener { view: View, actionId: Int, _: KeyEvent? ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                doSearch()
+                true
+            } else {
+                false
+            }
+        }
+        binding.query.setOnKeyListener { view: View, keyCode: Int, event: KeyEvent ->
+            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                doSearch()
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun doSearch() {
+        val query = binding.query.text.toString()
+        dismissKeyboard(binding.query.windowToken)
+        usersViewModel.setQuery(query)
     }
 }

@@ -2,16 +2,37 @@ package com.gaboardi.githubtest.adapters.users
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.gaboardi.githubtest.R
+import com.gaboardi.githubtest.databinding.UserItemBinding
+import com.gaboardi.githubtest.model.User
+import com.gaboardi.githubtest.util.AppExecutors
+import com.gaboardi.githubtest.view.common.DataBoundListAdapter
 
-class UsersAdapter: RecyclerView.Adapter<UsersViewHolder>() {
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UsersViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.user_item, parent, false)
-        return UsersViewHolder(view)
+class UsersAdapter(
+    val appExecutors: AppExecutors,
+    val onCLick: ((user: User) -> Unit)?
+): DataBoundListAdapter<User, UserItemBinding>(
+    appExecutors = appExecutors,
+    diffCallback = User.diffItemCallback
+){
+    override fun createBinding(parent: ViewGroup): UserItemBinding {
+        val binding = DataBindingUtil.inflate<UserItemBinding>(
+            LayoutInflater.from(parent.context),
+            R.layout.user_item,
+            parent,
+            false
+        )
+        return binding
     }
 
-    override fun getItemCount(): Int = 20
+    override fun bind(binding: UserItemBinding, item: User) {
+        binding.user = item
+        binding.root.setOnClickListener {
+            onCLick?.invoke(item)
+        }
+    }
 
-    override fun onBindViewHolder(holder: UsersViewHolder, position: Int) {}
 }

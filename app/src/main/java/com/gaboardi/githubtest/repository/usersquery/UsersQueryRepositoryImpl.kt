@@ -1,31 +1,32 @@
 package com.gaboardi.githubtest.repository.usersquery
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.gaboardi.githubtest.datasource.usersquery.local.UsersQueryBoundaryCallback
 import com.gaboardi.githubtest.datasource.usersquery.local.UsersQueryLocalDataSource
 import com.gaboardi.githubtest.datasource.usersquery.remote.UsersQueryRemoteDataSource
 import com.gaboardi.githubtest.model.User
-import com.gaboardi.githubtest.model.UserQueryResponse
-import com.gaboardi.githubtest.model.base.ApiResponse
-import com.gaboardi.githubtest.model.base.NetworkBoundResource
-import com.gaboardi.githubtest.model.base.Resource
+import com.gaboardi.githubtest.model.base.Listing
 import com.gaboardi.githubtest.util.AppExecutors
 
 class UsersQueryRepositoryImpl(
     val usersQueryRemoteDataSource: UsersQueryRemoteDataSource,
     val usersQueryLocalDataSource: UsersQueryLocalDataSource,
     val appExecutors: AppExecutors
-): UsersQueryRepository {
-    override fun queryForUsers(q: String): LiveData<Resource<List<User>>> {
-        return object: NetworkBoundResource<List<User>, UserQueryResponse>(appExecutors) {
-            override fun saveCallResult(item: UserQueryResponse) {
-                usersQueryLocalDataSource.insert(item.items)
-            }
+) : UsersQueryRepository {
+    override fun queryForUsers(q: String): Listing<User> {
+        val boundaryCallback = UsersQueryBoundaryCallback(
+            appExecutors,
+            usersQueryRemoteDataSource,
+            usersQueryLocalDataSource,
+            q,
+            { q, list -> saveToDb(list) },
 
-            override fun shouldFetch(data: List<User>?): Boolean = data == null || data.isEmpty()
+        )
+        return Listing(MutableLiveData(), MutableLiveData(), MutableLiveData(), {}, {})
+    }
 
-            override fun loadFromDb(): LiveData<List<User>> = usersQueryLocalDataSource.queryUsers(q)
-
-            override fun createCall(): LiveData<ApiResponse<UserQueryResponse>> = usersQueryRemoteDataSource.queryUsers(q)
-        }.asLiveData()
+    private fun saveToDb(users: List<User>){
+        usersQueryLocalDataSource.insert(users)
     }
 }

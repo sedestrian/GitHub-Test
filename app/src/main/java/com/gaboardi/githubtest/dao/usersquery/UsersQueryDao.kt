@@ -1,6 +1,7 @@
 package com.gaboardi.githubtest.dao.usersquery
 
 import androidx.lifecycle.LiveData
+import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -15,6 +16,9 @@ interface UsersQueryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(user: User)
 
-    @Query("SELECT * FROM users WHERE login = :q")
-    fun query(q: String): LiveData<List<User>>
+    @Query("SELECT * FROM users WHERE login LIKE '%' || :q || '%'")
+    fun query(q: String): DataSource.Factory<Int, User>
+
+    @Query("SELECT COUNT(*) FROM users")
+    fun count(): Int
 }
