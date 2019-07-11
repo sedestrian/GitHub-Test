@@ -15,6 +15,7 @@ import androidx.lifecycle.Observer
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.users.UsersAdapter
 import com.gaboardi.githubtest.databinding.FragmentUsersQueryBinding
+import com.gaboardi.githubtest.model.base.NetworkState
 import com.gaboardi.githubtest.model.base.Status
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.SpacingItemDecorator
@@ -55,19 +56,20 @@ class UsersQueryFragment : Fragment() {
     }
 
     private fun observe() {
+        usersViewModel.
         usersViewModel.results.observe(this, Observer {
-            when (it.status) {
-                Status.LOADING -> {
+            when (it.networkState.) {
+                NetworkState.LOADING -> {
                     binding.usersRecycler.isVisible = true
                     binding.lottie.isGone = true
                     binding.usersRecycler.shimmer()
                 }
-                Status.ERROR -> {
+                NetworkState.-> {
                     binding.usersRecycler.stopShimmering()
                     binding.usersRecycler.isGone = true
                     binding.lottie.isVisible = true
                 }
-                Status.SUCCESS -> {
+                NetworkState.LOADED -> {
                     binding.usersRecycler.isVisible = true
                     binding.lottie.isGone = true
                     usersAdapter.submitList(it.data!!)

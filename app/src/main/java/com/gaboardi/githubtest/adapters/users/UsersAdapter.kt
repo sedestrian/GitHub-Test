@@ -3,6 +3,8 @@ package com.gaboardi.githubtest.adapters.users
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.paging.PagedListAdapter
+import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.gaboardi.githubtest.R
@@ -14,9 +16,10 @@ import com.gaboardi.githubtest.view.common.DataBoundListAdapter
 class UsersAdapter(
     val appExecutors: AppExecutors,
     val onCLick: ((user: User) -> Unit)?
-): DataBoundListAdapter<User, UserItemBinding>(
-    appExecutors = appExecutors,
-    diffCallback = User.diffItemCallback
+): PagedListAdapter<User, RecyclerView.ViewHolder>(
+    AsyncDifferConfig.Builder<T>(diffCallback)
+        .setBackgroundThreadExecutor(appExecutors.diskIO())
+        .build()
 ){
     override fun createBinding(parent: ViewGroup): UserItemBinding {
         val binding = DataBindingUtil.inflate<UserItemBinding>(
