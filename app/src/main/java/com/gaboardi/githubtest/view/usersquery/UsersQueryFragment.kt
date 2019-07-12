@@ -45,9 +45,11 @@ class UsersQueryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        usersAdapter = UsersAdapter(appExecutors) {
-
-        }
+        usersAdapter = UsersAdapter(appExecutors, onCLick = {
+            //Navigation
+        }, onRetry = {
+            usersViewModel.refresh()
+        })
         binding.usersRecycler.adapter = usersAdapter
         binding.usersRecycler.addItemDecoration(SpacingItemDecorator(16.px, 16.px))
         binding.usersRecycler.setLayoutReference(R.layout.shimmer_user_item)
@@ -56,26 +58,14 @@ class UsersQueryFragment : Fragment() {
     }
 
     private fun observe() {
-        usersViewModel.
-        usersViewModel.results.observe(this, Observer {
-            when (it.networkState.) {
-                NetworkState.LOADING -> {
-                    binding.usersRecycler.isVisible = true
-                    binding.lottie.isGone = true
-                    binding.usersRecycler.shimmer()
-                }
-                NetworkState.-> {
-                    binding.usersRecycler.stopShimmering()
-                    binding.usersRecycler.isGone = true
-                    binding.lottie.isVisible = true
-                }
-                NetworkState.LOADED -> {
-                    binding.usersRecycler.isVisible = true
-                    binding.lottie.isGone = true
-                    usersAdapter.submitList(it.data!!)
-                    binding.usersRecycler.stopShimmering()
-                }
-            }
+        usersViewModel.users.observe(this, Observer {
+            usersAdapter.submitList(it)
+        })
+        usersViewModel.networkState.observe(this, Observer {
+            usersAdapter.setNetworkState(it)
+        })
+        usersViewModel.refreshState.observe(this, Observer {
+
         })
     }
 
