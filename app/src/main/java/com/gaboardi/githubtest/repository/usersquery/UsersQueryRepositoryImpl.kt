@@ -10,8 +10,13 @@ import com.gaboardi.githubtest.datasource.usersquery.local.UsersQueryBoundaryCal
 import com.gaboardi.githubtest.datasource.usersquery.local.UsersQueryLocalDataSource
 import com.gaboardi.githubtest.datasource.usersquery.remote.UsersQueryRemoteDataSource
 import com.gaboardi.githubtest.model.User
+import com.gaboardi.githubtest.model.UserQueryResponse
 import com.gaboardi.githubtest.model.base.*
 import com.gaboardi.githubtest.util.AppExecutors
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -22,6 +27,7 @@ class UsersQueryRepositoryImpl(
     val appExecutors: AppExecutors
 ) : UsersQueryRepository {
     override fun queryForUsers(q: String, pageSize: Int): Listing<User> {
+        MainScope().launch { withContext(Dispatchers.IO){ usersQueryLocalDataSource.clear() } }
         val boundaryCallback = UsersQueryBoundaryCallback(
             appExecutors,
             usersQueryRemoteDataSource,
@@ -37,7 +43,7 @@ class UsersQueryRepositoryImpl(
         }
 
         val config = PagedList.Config.Builder()
-            .setEnablePlaceholders(true)
+            .setEnablePlaceholders(false)
             .setPageSize(pageSize)
             .build()
 
@@ -63,21 +69,24 @@ class UsersQueryRepositoryImpl(
     private fun refresh(query: String, pageSize: Int): LiveData<NetworkState> {
         val networkState = MutableLiveData<NetworkState>()
         networkState.value = NetworkState.LOADING
-        Transformations.map(usersQueryRemoteDataSource.queryUsers(query, perPage = pageSize)){ response ->
-            when(response){
-                is ApiSuccessResponse -> {
-                    saveToDb(response.body.items)
-                }
-                is ApiErrorResponse -> {
-                    networkState.value = NetworkState.error(response.errorMessage)
-                }
-                is ApiEmptyResponse -> { networkState.value = NetworkState.error("Empty response") }
+        usersQueryRemoteDataSource.queryUsers().call(query, perPage = pageSize).enqueue(object: Callback<UserQueryResponse>{
+            override fun onFailure(call: Call<UserQueryResponse>, t: Throwable) {
+                networkState.value = NetworkState.error(t.message)
             }
-        }
+
+            override fun onResponse(call: Call<UserQueryResponse>, response: Response<UserQueryResponse>) {
+                appExecutors.diskIO().execute {
+                    saveToDb(response.body()?.items)
+                    networkState.postValue(NetworkState.LOADED)
+                }
+            }
+        })
         return networkState
     }
 
-    private fun saveToDb(users: List<User>){
-        usersQueryLocalDataSource.insert(users)
+    private fun saveToDb(users: List<User>?){
+        users?.let {
+            usersQueryLocalDataSource.insert(users)
+        }
     }
 }

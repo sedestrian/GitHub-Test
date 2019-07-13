@@ -51,6 +51,18 @@ class UsersAdapter(
         }
     }
 
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+        payloads: MutableList<Any>) {
+        if (payloads.isNotEmpty()) {
+//            val item = getItem(position)
+//            (holder as UsersViewHolder)
+        } else {
+            onBindViewHolder(holder, position)
+        }
+    }
+
     override fun getItemCount(): Int {
         return super.getItemCount() + if (hasExtraRow()) 1 else 0
     }

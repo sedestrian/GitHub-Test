@@ -12,6 +12,10 @@ import com.gaboardi.githubtest.model.base.ApiSuccessResponse
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.PagingRequestHelper
 import com.gaboardi.githubtest.util.createStatusLiveData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -21,51 +25,58 @@ class UsersQueryBoundaryCallback(
     val service: UsersQueryRemoteDataSource,
     val cache: UsersQueryLocalDataSource,
     val query: String,
-    val handleResponse: (String, List<User>) -> Unit,
+    val handleResponse: (String, List<User>?) -> Unit,
     val networkPageSize: Int
 ) : PagedList.BoundaryCallback<User>() {
     val helper = PagingRequestHelper(appExecutors.diskIO())
     val networkState = helper.createStatusLiveData()
+    var loadingEnd = false
 
     override fun onZeroItemsLoaded() {
         helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) { callback ->
-            Transformations.map(service.queryUsers(query, perPage = networkPageSize)){
-                handleApi(callback, it)
-            }
+            service.queryUsers().call(query, perPage = networkPageSize).enqueue(createWebserviceCallback(callback))
         }
     }
 
     override fun onItemAtEndLoaded(itemAtEnd: User) {
-        helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER){ callback ->
-            val page = cache.count() / networkPageSize
-            Transformations.map(service.queryUsers(query, page, networkPageSize)){
-                handleApi(callback, it)
+        if(!loadingEnd) {
+            loadingEnd
+            helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER) { callback ->
+                MainScope().launch {
+                    withContext(Dispatchers.IO) {
+                        val page = cache.count() / networkPageSize
+                        service.queryUsers().call(query, page, networkPageSize)
+                            .enqueue(createWebserviceCallback(callback))
+                    }
+                }
             }
         }
     }
 
     private fun insertItemsIntoDb(
-        response: ApiSuccessResponse<UserQueryResponse>,
+        response: Response<UserQueryResponse>,
         it: PagingRequestHelper.Request.Callback) {
         appExecutors.diskIO().execute {
-            handleResponse(query, response.body.items)
+            handleResponse(query, response.body()?.items)
             it.recordSuccess()
+            loadingEnd = false
         }
     }
 
-    private fun handleApi(
-        it: PagingRequestHelper.Request.Callback,
-        response: ApiResponse<UserQueryResponse>
-    ){
-        when(response){
-            is ApiSuccessResponse -> {
+    private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback)
+            : Callback<UserQueryResponse> {
+        return object : Callback<UserQueryResponse> {
+            override fun onFailure(
+                call: Call<UserQueryResponse>,
+                t: Throwable) {
+                it.recordFailure(t)
+                loadingEnd = false
+            }
+
+            override fun onResponse(
+                call: Call<UserQueryResponse>,
+                response: Response<UserQueryResponse>) {
                 insertItemsIntoDb(response, it)
-            }
-            is ApiEmptyResponse -> {
-                it.recordFailure(Throwable("Empty response"))
-            }
-            is ApiErrorResponse -> {
-                it.recordFailure(Throwable(response.errorMessage))
             }
         }
     }

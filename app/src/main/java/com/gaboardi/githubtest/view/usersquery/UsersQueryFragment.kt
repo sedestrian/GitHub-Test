@@ -15,14 +15,11 @@ import androidx.lifecycle.Observer
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.users.UsersAdapter
 import com.gaboardi.githubtest.databinding.FragmentUsersQueryBinding
-import com.gaboardi.githubtest.model.base.NetworkState
-import com.gaboardi.githubtest.model.base.Status
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.SpacingItemDecorator
 import com.gaboardi.githubtest.util.dismissKeyboard
 import com.gaboardi.githubtest.util.px
 import com.gaboardi.githubtest.viewmodel.usersquery.UsersQueryViewModel
-import org.koin.android.ext.android.bind
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -53,6 +50,7 @@ class UsersQueryFragment : Fragment() {
         binding.usersRecycler.adapter = usersAdapter
         binding.usersRecycler.addItemDecoration(SpacingItemDecorator(16.px, 16.px))
         binding.usersRecycler.setLayoutReference(R.layout.shimmer_user_item)
+        binding.usersRecycler.stopShimmering()
         observe()
         react()
     }
@@ -60,6 +58,11 @@ class UsersQueryFragment : Fragment() {
     private fun observe() {
         usersViewModel.users.observe(this, Observer {
             usersAdapter.submitList(it)
+            if(it.isNotEmpty()){
+                binding.lottie.isGone = true
+            }else{
+                binding.lottie.isVisible = true
+            }
         })
         usersViewModel.networkState.observe(this, Observer {
             usersAdapter.setNetworkState(it)
@@ -71,7 +74,11 @@ class UsersQueryFragment : Fragment() {
 
     private fun react() {
         binding.query.setOnEditorActionListener { view: View, actionId: Int, _: KeyEvent? ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                actionId == EditorInfo.IME_ACTION_DONE ||
+                actionId == EditorInfo.IME_ACTION_GO ||
+                actionId == EditorInfo.IME_ACTION_NEXT
+            ) {
                 doSearch()
                 true
             } else {

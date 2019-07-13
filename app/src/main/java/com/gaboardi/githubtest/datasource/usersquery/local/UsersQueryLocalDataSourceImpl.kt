@@ -12,4 +12,5 @@ class UsersQueryLocalDataSourceImpl(
     override fun insert(user: User) = usersQueryDao.insert(user)
     override fun insert(users: List<User>) = usersQueryDao.insert(users)
     override fun count(): Int = usersQueryDao.count()
+    override fun clear() = usersQueryDao.clear()
 }

@@ -42,7 +42,9 @@ class ShimmerRecycler : RecyclerView {
                 actualAdapter = adapter
             adapter = shimmerAdapter
         } else {
-            adapter = actualAdapter
+            actualAdapter?.also {
+                adapter = it
+            }
         }
     }
 

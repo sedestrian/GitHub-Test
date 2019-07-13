@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomViewTarget
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.model.User
 
