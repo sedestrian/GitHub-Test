@@ -16,7 +16,7 @@ interface UsersQueryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(user: User)
 
-    @Query("SELECT * FROM users WHERE login LIKE '%' || :q || '%' ORDER BY score, login DESC")
+    @Query("SELECT * FROM users WHERE login LIKE '%' || :q || '%' ORDER BY score DESC, login ASC")
     fun query(q: String): DataSource.Factory<Int, User>
 
     @Query("SELECT COUNT(*) FROM users")

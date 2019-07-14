@@ -27,7 +27,6 @@ class UsersQueryRepositoryImpl(
     val appExecutors: AppExecutors
 ) : UsersQueryRepository {
     override fun queryForUsers(q: String, pageSize: Int): Listing<User> {
-        MainScope().launch { withContext(Dispatchers.IO){ usersQueryLocalDataSource.clear() } }
         val boundaryCallback = UsersQueryBoundaryCallback(
             appExecutors,
             usersQueryRemoteDataSource,
@@ -45,6 +44,7 @@ class UsersQueryRepositoryImpl(
         val config = PagedList.Config.Builder()
             .setEnablePlaceholders(false)
             .setPageSize(pageSize)
+            .setPrefetchDistance(1)
             .build()
 
         // We use toLiveData Kotlin extension function here, you could also use LivePagedListBuilder

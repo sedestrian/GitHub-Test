@@ -1,24 +1,17 @@
 package com.gaboardi.githubtest.datasource.usersquery.local
 
-import androidx.lifecycle.Transformations
 import androidx.paging.PagedList
 import com.gaboardi.githubtest.datasource.usersquery.remote.UsersQueryRemoteDataSource
 import com.gaboardi.githubtest.model.User
 import com.gaboardi.githubtest.model.UserQueryResponse
-import com.gaboardi.githubtest.model.base.ApiEmptyResponse
-import com.gaboardi.githubtest.model.base.ApiErrorResponse
-import com.gaboardi.githubtest.model.base.ApiResponse
-import com.gaboardi.githubtest.model.base.ApiSuccessResponse
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.PagingRequestHelper
 import com.gaboardi.githubtest.util.createStatusLiveData
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class UsersQueryBoundaryCallback(
     val appExecutors: AppExecutors,
@@ -39,23 +32,18 @@ class UsersQueryBoundaryCallback(
     }
 
     override fun onItemAtEndLoaded(itemAtEnd: User) {
-        if(!loadingEnd) {
-            loadingEnd
-            helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER) { callback ->
-                MainScope().launch {
-                    withContext(Dispatchers.IO) {
-                        val page = cache.count() / networkPageSize
-                        service.queryUsers().call(query, page, networkPageSize)
-                            .enqueue(createWebserviceCallback(callback))
-                    }
-                }
-            }
+        helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER) { callback ->
+            val page = ceil(cache.count().toDouble() / networkPageSize) + 1
+            println("Loading page $page")
+            service.queryUsers().call(query, page.toInt(), networkPageSize)
+                .enqueue(createWebserviceCallback(callback))
         }
     }
 
     private fun insertItemsIntoDb(
         response: Response<UserQueryResponse>,
-        it: PagingRequestHelper.Request.Callback) {
+        it: PagingRequestHelper.Request.Callback
+    ) {
         appExecutors.diskIO().execute {
             handleResponse(query, response.body()?.items)
             it.recordSuccess()
@@ -68,14 +56,18 @@ class UsersQueryBoundaryCallback(
         return object : Callback<UserQueryResponse> {
             override fun onFailure(
                 call: Call<UserQueryResponse>,
-                t: Throwable) {
+                t: Throwable
+            ) {
+                println("Failure")
                 it.recordFailure(t)
                 loadingEnd = false
             }
 
             override fun onResponse(
                 call: Call<UserQueryResponse>,
-                response: Response<UserQueryResponse>) {
+                response: Response<UserQueryResponse>
+            ) {
+                println("Success")
                 insertItemsIntoDb(response, it)
             }
         }
