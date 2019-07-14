@@ -17,10 +17,12 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val dataModule = module {
-    single { Room.databaseBuilder(
+    single {
+        Room.databaseBuilder(
             App.INSTANCE,
             AppDatabase::class.java, "database-name"
         )
+            .allowMainThreadQueries()
             .fallbackToDestructiveMigration()
             .build()
     }

@@ -2,6 +2,8 @@ package com.gaboardi.githubtest.viewmodel.usersquery
 
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
+import androidx.lifecycle.Transformations.map
+import androidx.lifecycle.Transformations.switchMap
 import com.gaboardi.githubtest.model.User
 import com.gaboardi.githubtest.model.UserQueryResponse
 import com.gaboardi.githubtest.model.base.*
@@ -11,30 +13,25 @@ import java.util.*
 class UsersQueryViewModel(
     private val usersUseCase: QueryUsersUseCase
 ) : ViewModel() {
-    private val _query = MutableLiveData<String>()
-//    private val nextPageHandler = NextPageHandler(repoRepository)
+    private val PAGE_SIZE = 30
 
-    val query : LiveData<String> = _query
+    private val query = MutableLiveData<String>()
+    private val repoResult = map(query) { usersUseCase.query(it, PAGE_SIZE) }
 
-    val results: LiveData<Resource<List<User>>> = Transformations
-        .switchMap(_query) { search ->
-            if (search.isNullOrBlank()) {
-                AbsentLiveData.create()
-            } else {
-                usersUseCase.query(search)
-            }
-        }
+    val networkState = switchMap(repoResult) { it.networkState }
+    val users = switchMap(repoResult) { it.pagedList }
+    val refreshState = switchMap(repoResult) { it.refreshState }
 
     /*val loadMoreStatus: LiveData<LoadMoreState>
         get() = nextPageHandler.loadMoreState*/
 
     fun setQuery(originalInput: String) {
         val input = originalInput.toLowerCase(Locale.getDefault()).trim()
-        if (input == _query.value) {
+        if (input == query.value) {
             return
         }
 //        nextPageHandler.reset()
-        _query.value = input
+        query.value = input
     }
 
     /*fun loadNextPage() {
@@ -46,12 +43,12 @@ class UsersQueryViewModel(
     }*/
 
     fun refresh() {
-        _query.value?.let {
-            _query.value = it
-        }
+        repoResult.value?.refresh?.invoke()
     }
 
-    class LoadMoreState(val isRunning: Boolean, val errorMessage: String?) {
+    fun currentQuery(): String? = query.value
+
+    /*class LoadMoreState(val isRunning: Boolean, val errorMessage: String?) {
         private var handledError = false
 
         val errorMessageIfNotHandled: String?
@@ -63,7 +60,7 @@ class UsersQueryViewModel(
                 return errorMessage
             }
     }
-
+*/
     /*class NextPageHandler(private val repository: RepoRepository) : Observer<Resource<Boolean>> {
         private var nextPageLiveData: LiveData<Resource<Boolean>>? = null
         val loadMoreState = MutableLiveData<LoadMoreState>()

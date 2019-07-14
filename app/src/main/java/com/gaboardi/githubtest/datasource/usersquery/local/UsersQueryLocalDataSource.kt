@@ -9,4 +9,5 @@ interface UsersQueryLocalDataSource {
     fun insert(users: List<User>)
     fun insert(user: User)
     fun count(): Int
+    fun clear()
 }

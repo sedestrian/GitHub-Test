@@ -4,5 +4,5 @@ import com.gaboardi.githubtest.model.User
 import com.gaboardi.githubtest.model.base.Listing
 
 interface UsersQueryRepository {
-    fun queryForUsers(q: String): Listing<User>
+    fun queryForUsers(q: String, pageSize: Int): Listing<User>
 }
