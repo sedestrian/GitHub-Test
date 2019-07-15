@@ -9,5 +9,17 @@
         android:id="@+id/usersQueryFragment"
         android:name="com.gaboardi.githubtest.view.usersquery.UsersQueryFragment"
         android:label="fragment_users_query"
-        tools:layout="@layout/fragment_users_query" />
+        tools:layout="@layout/fragment_users_query" >
+        <action
+            android:id="@+id/action_usersQueryFragment_to_userRepositoriesFragment"
+            app:destination="@id/userRepositoriesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/userRepositoriesFragment"
+        android:name="com.gaboardi.githubtest.view.userrepos.UserRepositoriesFragment"
+        android:label="UserRepositoriesFragment" >
+        <argument
+            android:name="user"
+            app:argType="string" />
+    </fragment>
 </navigation>

@@ -15,10 +15,11 @@ class UsersViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val image: ImageView = itemView.findViewById(R.id.imageView)
     val name: TextView = itemView.findViewById(R.id.name)
 
-    fun bindTo(user: User?) {
+    fun bindTo(user: User?, onCLick: ((user: User) -> Unit)?) {
         user?.let {
             Glide.with(itemView).load(it.avatarUrl).into(image)
             name.text = it.login
+            itemView.setOnClickListener { view -> onCLick?.invoke(it) }
         }
     }
 

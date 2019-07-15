@@ -1,27 +1,34 @@
 package com.gaboardi.githubtest.view.usersquery
 
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
-import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.inputmethod.EditorInfo
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.users.UsersAdapter
 import com.gaboardi.githubtest.databinding.FragmentUsersQueryBinding
+import com.gaboardi.githubtest.model.base.NetworkState
+import com.gaboardi.githubtest.model.base.Status
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.SpacingItemDecorator
 import com.gaboardi.githubtest.util.dismissKeyboard
 import com.gaboardi.githubtest.util.px
 import com.gaboardi.githubtest.viewmodel.usersquery.UsersQueryViewModel
+import com.google.android.material.snackbar.Snackbar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+
 
 class UsersQueryFragment : Fragment() {
     private val usersViewModel: UsersQueryViewModel by viewModel()
@@ -29,6 +36,11 @@ class UsersQueryFragment : Fragment() {
     private lateinit var usersAdapter: UsersAdapter
 
     private val appExecutors: AppExecutors by inject()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,14 +55,18 @@ class UsersQueryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         usersAdapter = UsersAdapter(appExecutors, onCLick = {
-            //Navigation
+            findNavController().navigate(
+                UsersQueryFragmentDirections.actionUsersQueryFragmentToUserRepositoriesFragment(
+                    it.login
+                )
+            )
         }, onRetry = {
             usersViewModel.refresh()
         })
+        binding.refresh.setProgressViewOffset(true, 0, 78.px)
+        binding.usersRecycler.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.usersRecycler.adapter = usersAdapter
         binding.usersRecycler.addItemDecoration(SpacingItemDecorator(16.px, 16.px))
-        binding.usersRecycler.setLayoutReference(R.layout.shimmer_user_item)
-        binding.usersRecycler.stopShimmering()
         observe()
         react()
     }
@@ -58,18 +74,60 @@ class UsersQueryFragment : Fragment() {
     private fun observe() {
         usersViewModel.users.observe(this, Observer {
             usersAdapter.submitList(it)
-            if(it.isNotEmpty()){
+            if (it.isNotEmpty()) {
                 binding.lottie.isGone = true
-            }else{
+                binding.refresh.isVisible = true
+            } else {
                 binding.lottie.isVisible = true
+                binding.refresh.isGone = true
             }
         })
         usersViewModel.networkState.observe(this, Observer {
             usersAdapter.setNetworkState(it)
+            handleNetworkState(it.status)
         })
         usersViewModel.refreshState.observe(this, Observer {
-
+            binding.refresh.isRefreshing = it == NetworkState.LOADING
+            usersAdapter.setNetworkState(it)
+            handleNetworkState(it.status)
         })
+    }
+
+    private fun handleNetworkState(state: Status){
+        if (state == Status.FAILED || state == Status.SUCCESS) {
+            if (!checkForNetwork()) {
+                showNoNetworkMessage()
+            }
+        }
+    }
+
+    private fun showNoNetworkMessage() {
+        val snack = Snackbar.make(binding.root, getString(R.string.youre_offline), Snackbar.LENGTH_INDEFINITE)
+        snack.setAction(R.string.retry) {
+            usersViewModel.refresh()
+            snack.dismiss()
+        }
+        snack.show()
+    }
+
+    private fun checkForNetwork(): Boolean {
+        val cm = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+        cm?.let {
+            if (Build.VERSION.SDK_INT < 23) {
+                cm.activeNetworkInfo?.let { ni ->
+                    return ni.isConnected && (ni.type == ConnectivityManager.TYPE_WIFI || ni.type == ConnectivityManager.TYPE_MOBILE)
+                }
+            } else {
+                cm.activeNetwork?.also { network ->
+                    cm.getNetworkCapabilities(network)?.also { nc ->
+                        return nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                                nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    }
+                }
+            }
+        }
+        return false
     }
 
     private fun react() {
@@ -93,6 +151,7 @@ class UsersQueryFragment : Fragment() {
                 false
             }
         }
+        binding.refresh.setOnRefreshListener { usersViewModel.refresh() }
     }
 
     private fun doSearch() {

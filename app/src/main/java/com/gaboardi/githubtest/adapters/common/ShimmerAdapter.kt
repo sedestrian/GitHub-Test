@@ -1,11 +1,9 @@
-package com.gaboardi.githubtest.adapters.users
+package com.gaboardi.githubtest.adapters.common
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
-import com.facebook.shimmer.ShimmerFrameLayout
 import com.gaboardi.githubtest.R
 import kotlinx.android.synthetic.main.shimmer_layout.view.*
 

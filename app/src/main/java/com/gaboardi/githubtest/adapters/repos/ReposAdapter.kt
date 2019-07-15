@@ -1,4 +1,4 @@
-package com.gaboardi.githubtest.adapters.users
+package com.gaboardi.githubtest.adapters.repos
 
 import android.view.ViewGroup
 import androidx.paging.PagedListAdapter
@@ -6,16 +6,16 @@ import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.RecyclerView
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.common.NetworkStateItemViewHolder
-import com.gaboardi.githubtest.model.User
 import com.gaboardi.githubtest.model.base.NetworkState
+import com.gaboardi.githubtest.model.userrepos.Repo
 import com.gaboardi.githubtest.util.AppExecutors
 
-class UsersAdapter(
+class ReposAdapter(
     val appExecutors: AppExecutors,
-    val onCLick: ((user: User) -> Unit)?,
+    val onCLick: ((user: Repo) -> Unit)?,
     val onRetry: () -> Unit
-): PagedListAdapter<User, RecyclerView.ViewHolder>(
-    AsyncDifferConfig.Builder(User.diffItemCallback)
+): PagedListAdapter<Repo, RecyclerView.ViewHolder>(
+    AsyncDifferConfig.Builder(Repo.diffItemCallback)
         .setBackgroundThreadExecutor(appExecutors.diskIO())
         .build()
 ){
@@ -26,13 +26,13 @@ class UsersAdapter(
         return if (hasExtraRow() && position == itemCount - 1) {
             R.layout.network_state_item
         } else {
-            R.layout.user_item
+            R.layout.repo_item
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.user_item -> UsersViewHolder.create(parent)
+            R.layout.repo_item -> ReposViewHolder.create(parent)
             R.layout.network_state_item -> NetworkStateItemViewHolder.create(parent, onRetry)
             else -> throw IllegalArgumentException("unknown view type $viewType")
         }
@@ -40,7 +40,7 @@ class UsersAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (getItemViewType(position)) {
-            R.layout.user_item -> (holder as UsersViewHolder).bindTo(getItem(position), onCLick)
+            R.layout.repo_item -> (holder as ReposViewHolder).bindTo(getItem(position))
             R.layout.network_state_item -> (holder as NetworkStateItemViewHolder).bindTo(
                 networkState)
         }

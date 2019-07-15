@@ -5,7 +5,7 @@ import android.util.AttributeSet
 import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.gaboardi.githubtest.adapters.users.ShimmerAdapter
+import com.gaboardi.githubtest.adapters.common.ShimmerAdapter
 
 class ShimmerRecycler : RecyclerView {
     private var actualAdapter: Adapter<*>? = null
