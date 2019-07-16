@@ -25,6 +25,10 @@ class UsersQueryBoundaryCallback(
     val networkState = helper.createStatusLiveData()
     var loadingEnd = false
 
+    fun resetErrors(){
+        helper.clearRequestQueue()
+    }
+
     override fun onZeroItemsLoaded() {
         helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) { callback ->
             service.queryUsers().call(query, perPage = networkPageSize).enqueue(createWebserviceCallback(callback))

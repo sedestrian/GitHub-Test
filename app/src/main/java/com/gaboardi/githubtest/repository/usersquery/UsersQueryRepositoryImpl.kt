@@ -57,6 +57,7 @@ class UsersQueryRepositoryImpl(
                 boundaryCallback.helper.retryAllFailed()
             },
             refresh = {
+                boundaryCallback.resetErrors()
                 refreshTrigger.value = null
             },
             refreshState = refreshState

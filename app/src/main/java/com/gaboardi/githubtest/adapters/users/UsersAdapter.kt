@@ -66,6 +66,7 @@ class UsersAdapter(
         val previousState = this.networkState
         val hadExtraRow = hasExtraRow()
         this.networkState = newNetworkState
+        println("adapter ${networkState?.status?.name}")
         val hasExtraRow = hasExtraRow()
         if (hadExtraRow != hasExtraRow) {
             if (hadExtraRow) {

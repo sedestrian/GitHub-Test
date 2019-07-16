@@ -84,11 +84,13 @@ class UsersQueryFragment : Fragment() {
         })
         usersViewModel.networkState.observe(this, Observer {
             usersAdapter.setNetworkState(it)
+            println("network ${it.status.name}")
             handleNetworkState(it.status)
         })
         usersViewModel.refreshState.observe(this, Observer {
             binding.refresh.isRefreshing = it == NetworkState.LOADING
             usersAdapter.setNetworkState(it)
+            println("refresh ${it.status.name}")
             handleNetworkState(it.status)
         })
     }

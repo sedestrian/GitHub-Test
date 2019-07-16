@@ -12,7 +12,7 @@ public class PagingRequestHelper {
     private final Object mLock = new Object();
     private final Executor mRetryService;
     @GuardedBy("mLock")
-    private final RequestQueue[] mRequestQueues = new RequestQueue[]
+    private RequestQueue[] mRequestQueues = new RequestQueue[]
             {new RequestQueue(RequestType.INITIAL),
                     new RequestQueue(RequestType.BEFORE),
                     new RequestQueue(RequestType.AFTER)};
@@ -128,6 +128,13 @@ public class PagingRequestHelper {
         for (Listener listener : mListeners) {
             listener.onStatusChange(report);
         }
+    }
+
+    public void clearRequestQueue(){
+        mRequestQueues = new RequestQueue[]
+                {new RequestQueue(RequestType.INITIAL),
+                        new RequestQueue(RequestType.BEFORE),
+                        new RequestQueue(RequestType.AFTER)};
     }
     /**
      * Retries all failed requests.
