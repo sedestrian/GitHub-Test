@@ -4,11 +4,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations.map
 import androidx.lifecycle.Transformations.switchMap
 import androidx.lifecycle.ViewModel
+import com.gaboardi.githubtest.model.base.Status
 import com.gaboardi.githubtest.usecases.stargazers.StargazersUseCase
+import com.gaboardi.githubtest.util.NetworkChecker
 import java.util.*
 
 class StargazersViewModel(
-    val stargazersUseCase: StargazersUseCase
+    private val stargazersUseCase: StargazersUseCase,
+    private val networkChecker: NetworkChecker
 ): ViewModel() {
     private val PAGE_SIZE = 30
 
@@ -18,6 +21,8 @@ class StargazersViewModel(
     val networkState = switchMap(repoResult) { it.networkState }
     val stargazers = switchMap(repoResult) { it.pagedList }
     val refreshState = switchMap(repoResult) { it.refreshState }
+
+    val networkAvailable = MutableLiveData<Boolean>()
 
     fun setRepoFullName(originalInput: String) {
         val input = originalInput.toLowerCase(Locale.getDefault()).trim()
@@ -32,4 +37,10 @@ class StargazersViewModel(
     }
 
     fun currentQuery(): String? = repoFullName.value
+
+    fun handleNetworkState(state: Status) {
+        if (state == Status.FAILED || state == Status.SUCCESS) {
+            networkAvailable.postValue(networkChecker.checkForNetwork())
+        }
+    }
 }

@@ -11,10 +11,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.NavigationUI
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.stargazers.StargazersAdapter
 import com.gaboardi.githubtest.databinding.FragmentStargazersBinding
@@ -23,6 +20,7 @@ import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.SpacingItemDecorator
 import com.gaboardi.githubtest.util.px
 import com.gaboardi.githubtest.viewmodel.stargazers.StargazersViewModel
+import com.google.android.material.snackbar.Snackbar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -70,17 +68,30 @@ class StargazersFragment : Fragment() {
             if (it.isNotEmpty()) {
                 binding.lottie.isGone = true
                 binding.refresh.isVisible = true
-            } else {
-                binding.lottie.isVisible = true
-                binding.refresh.isGone = true
             }
         })
         stargazersViewModel.networkState.observe(this, Observer {
             usersAdapter.setNetworkState(it)
+            stargazersViewModel.handleNetworkState(it.status)
         })
         stargazersViewModel.refreshState.observe(this, Observer {
             binding.refresh.isRefreshing = it == NetworkState.LOADING
+            usersAdapter.setNetworkState(it)
+            stargazersViewModel.handleNetworkState(it.status)
         })
+        stargazersViewModel.networkAvailable.observe(this, Observer {
+            if (!it)
+                showNoNetworkMessage()
+        })
+    }
+
+    private fun showNoNetworkMessage() {
+        val snack = Snackbar.make(binding.root, getString(R.string.youre_offline), Snackbar.LENGTH_INDEFINITE)
+        snack.setAction(R.string.retry) {
+            stargazersViewModel.refresh()
+            snack.dismiss()
+        }
+        snack.show()
     }
 
     private fun react() {

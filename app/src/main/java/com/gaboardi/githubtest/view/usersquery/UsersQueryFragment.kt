@@ -74,33 +74,29 @@ class UsersQueryFragment : Fragment() {
     private fun observe() {
         usersViewModel.users.observe(this, Observer {
             usersAdapter.submitList(it)
-            if (it.isNotEmpty()) {
+            val query = usersViewModel.currentQuery()
+            if (it.isNotEmpty() || (query != null && query.isNotBlank())) {
                 binding.lottie.isGone = true
                 binding.refresh.isVisible = true
-            } else {
+            } else if(query.isNullOrBlank()){
                 binding.lottie.isVisible = true
                 binding.refresh.isGone = true
             }
         })
         usersViewModel.networkState.observe(this, Observer {
             usersAdapter.setNetworkState(it)
-            println("network ${it.status.name}")
-            handleNetworkState(it.status)
+            usersViewModel.handleNetworkState(it.status)
         })
         usersViewModel.refreshState.observe(this, Observer {
             binding.refresh.isRefreshing = it == NetworkState.LOADING
             usersAdapter.setNetworkState(it)
-            println("refresh ${it.status.name}")
-            handleNetworkState(it.status)
+            usersViewModel.handleNetworkState(it.status)
         })
-    }
-
-    private fun handleNetworkState(state: Status){
-        if (state == Status.FAILED || state == Status.SUCCESS) {
-            if (!checkForNetwork()) {
+        usersViewModel.networkAvailable.observe(this, Observer {
+            if(!it){
                 showNoNetworkMessage()
             }
-        }
+        })
     }
 
     private fun showNoNetworkMessage() {
@@ -110,26 +106,6 @@ class UsersQueryFragment : Fragment() {
             snack.dismiss()
         }
         snack.show()
-    }
-
-    private fun checkForNetwork(): Boolean {
-        val cm = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-
-        cm?.let {
-            if (Build.VERSION.SDK_INT < 23) {
-                cm.activeNetworkInfo?.let { ni ->
-                    return ni.isConnected && (ni.type == ConnectivityManager.TYPE_WIFI || ni.type == ConnectivityManager.TYPE_MOBILE)
-                }
-            } else {
-                cm.activeNetwork?.also { network ->
-                    cm.getNetworkCapabilities(network)?.also { nc ->
-                        return nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                                nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-                    }
-                }
-            }
-        }
-        return false
     }
 
     private fun react() {

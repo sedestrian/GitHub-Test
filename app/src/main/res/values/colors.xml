@@ -5,4 +5,5 @@
     <color name="colorAccent">#5cb55a</color>
 
     <color name="shimmerGray">#acacac</color>
+    <color name="textGray">#6F6F6F</color>
 </resources>

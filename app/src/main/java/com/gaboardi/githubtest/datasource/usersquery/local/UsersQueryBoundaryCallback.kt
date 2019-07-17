@@ -24,7 +24,7 @@ class UsersQueryBoundaryCallback(
     val networkState = helper.createStatusLiveData()
     var loadingEnd = false
 
-    fun resetErrors(){
+    fun resetErrors() {
         helper.clearRequestQueue()
     }
 
@@ -70,8 +70,13 @@ class UsersQueryBoundaryCallback(
                 call: Call<UserQueryResponse>,
                 response: Response<UserQueryResponse>
             ) {
-                println("Success")
-                insertItemsIntoDb(response, it)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null && body.items.isNotEmpty()) {
+                        println("Success")
+                        insertItemsIntoDb(response, it)
+                    } else it.recordFailure(Throwable("Body empty or error"))
+                } else it.recordFailure(Throwable("Call not successful"))
             }
         }
     }

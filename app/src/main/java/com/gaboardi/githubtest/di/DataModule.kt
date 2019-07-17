@@ -66,7 +66,7 @@ val dataModule = module {
     single<UserReposUseCase> { UserReposUseCaseImpl(get()) }
     single<StargazersUseCase> { StargazersUseCaseImpl(get()) }
 
-    viewModel { UsersQueryViewModel(get()) }
-    viewModel { UserReposViewModel(get()) }
-    viewModel { StargazersViewModel(get()) }
+    viewModel { UsersQueryViewModel(get(), get()) }
+    viewModel { UserReposViewModel(get(), get()) }
+    viewModel { StargazersViewModel(get(), get()) }
 }
