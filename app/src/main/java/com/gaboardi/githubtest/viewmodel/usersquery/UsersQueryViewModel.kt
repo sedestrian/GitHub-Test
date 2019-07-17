@@ -1,12 +1,8 @@
 package com.gaboardi.githubtest.viewmodel.usersquery
 
 import androidx.lifecycle.*
-import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations.map
 import androidx.lifecycle.Transformations.switchMap
-import com.gaboardi.githubtest.model.User
-import com.gaboardi.githubtest.model.UserQueryResponse
-import com.gaboardi.githubtest.model.base.*
 import com.gaboardi.githubtest.usecases.usersquery.QueryUsersUseCase
 import java.util.*
 

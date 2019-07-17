@@ -1,24 +1,24 @@
-package com.gaboardi.githubtest.datasource.userrepos.local
+package com.gaboardi.githubtest.datasource.stargazers.local
 
 import androidx.paging.PagedList
-import com.gaboardi.githubtest.datasource.userrepos.remote.UserReposRemoteDataSource
-import com.gaboardi.githubtest.model.userrepos.Repo
+import com.gaboardi.githubtest.datasource.stargazers.remote.StargazersRemoteDataSource
+import com.gaboardi.githubtest.model.stargazers.Stargazer
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.PagingRequestHelper
 import com.gaboardi.githubtest.util.createStatusLiveData
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import kotlin.math.ceil
+import java.lang.Math.ceil
 
-class UserReposBoundaryCallback(
+class StargazersBoundaryCallback(
     val appExecutors: AppExecutors,
-    val service: UserReposRemoteDataSource,
-    val cache: UserReposLocalDataSource,
-    val user: String,
-    val handleResponse: (String, List<Repo>?) -> Unit,
+    val service: StargazersRemoteDataSource,
+    val cache: StargazersLocalDataSource,
+    val repoFullName: String,
+    val handleResponse: (String, List<Stargazer>?) -> Unit,
     val networkPageSize: Int
-) : PagedList.BoundaryCallback<Repo>() {
+) : PagedList.BoundaryCallback<Stargazer>() {
     val helper = PagingRequestHelper(appExecutors.diskIO())
     val networkState = helper.createStatusLiveData()
     var loadingEnd = false
@@ -29,35 +29,35 @@ class UserReposBoundaryCallback(
 
     override fun onZeroItemsLoaded() {
         helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) { callback ->
-            service.queryRepos().call(user, perPage = networkPageSize).enqueue(createWebserviceCallback(callback))
+            service.getStargazers().call(repoFullName, perPage = networkPageSize).enqueue(createWebserviceCallback(callback))
         }
     }
 
-    override fun onItemAtEndLoaded(itemAtEnd: Repo) {
+    override fun onItemAtEndLoaded(itemAtEnd: Stargazer) {
         helper.runIfNotRunning(PagingRequestHelper.RequestType.AFTER) { callback ->
             val page = ceil(cache.count().toDouble() / networkPageSize) + 1
             println("Loading page $page")
-            service.queryRepos().call(user, page.toInt(), networkPageSize)
+            service.getStargazers().call(repoFullName, page.toInt(), networkPageSize)
                 .enqueue(createWebserviceCallback(callback))
         }
     }
 
     private fun insertItemsIntoDb(
-        response: Response<List<Repo>>,
+        response: Response<List<Stargazer>>,
         it: PagingRequestHelper.Request.Callback
     ) {
         appExecutors.diskIO().execute {
-            handleResponse(user, response.body())
+            handleResponse(repoFullName, response.body())
             it.recordSuccess()
             loadingEnd = false
         }
     }
 
     private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback)
-            : Callback<List<Repo>> {
-        return object : Callback<List<Repo>> {
+            : Callback<List<Stargazer>> {
+        return object : Callback<List<Stargazer>> {
             override fun onFailure(
-                call: Call<List<Repo>>,
+                call: Call<List<Stargazer>>,
                 t: Throwable
             ) {
                 println("Failure")
@@ -66,8 +66,8 @@ class UserReposBoundaryCallback(
             }
 
             override fun onResponse(
-                call: Call<List<Repo>>,
-                response: Response<List<Repo>>
+                call: Call<List<Stargazer>>,
+                response: Response<List<Stargazer>>
             ) {
                 println("Success")
                 insertItemsIntoDb(response, it)

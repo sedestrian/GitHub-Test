@@ -21,5 +21,16 @@
         <argument
             android:name="user"
             app:argType="string" />
+        <action
+            android:id="@+id/action_userRepositoriesFragment_to_stargazersFragment"
+            app:destination="@id/stargazersFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/stargazersFragment"
+        android:name="com.gaboardi.githubtest.view.stargazers.StargazersFragment"
+        android:label="StargazersFragment" >
+        <argument
+            android:name="repoFullName"
+            app:argType="string" />
     </fragment>
 </navigation>

@@ -10,7 +10,7 @@ import retrofit2.http.Query
 interface Stargazers {
     @GET("/repos/{fullName}/stargazers")
     fun call(
-        @Path("fullName") fullName: String,
+        @Path("fullName", encoded = true) fullName: String,
         @Query("page") page: Int? = null,
         @IntRange(from = 1, to = 100) @Query("per_page") perPage: Int? = null
     ): Call<List<Stargazer>>

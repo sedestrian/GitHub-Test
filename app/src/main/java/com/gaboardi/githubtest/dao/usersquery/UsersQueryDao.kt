@@ -1,12 +1,11 @@
 package com.gaboardi.githubtest.dao.usersquery
 
-import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.gaboardi.githubtest.model.User
+import com.gaboardi.githubtest.model.users.User
 
 @Dao
 interface UsersQueryDao {

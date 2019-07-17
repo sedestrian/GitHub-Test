@@ -2,8 +2,8 @@ package com.gaboardi.githubtest.datasource.usersquery.local
 
 import androidx.paging.PagedList
 import com.gaboardi.githubtest.datasource.usersquery.remote.UsersQueryRemoteDataSource
-import com.gaboardi.githubtest.model.User
-import com.gaboardi.githubtest.model.UserQueryResponse
+import com.gaboardi.githubtest.model.users.User
+import com.gaboardi.githubtest.model.users.UserQueryResponse
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.PagingRequestHelper
 import com.gaboardi.githubtest.util.createStatusLiveData
@@ -11,7 +11,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import kotlin.math.ceil
-import kotlin.math.floor
 
 class UsersQueryBoundaryCallback(
     val appExecutors: AppExecutors,

@@ -1,4 +1,4 @@
-package com.gaboardi.githubtest.repository.userrepos
+package com.gaboardi.githubtest.repository.stargazers
 
 import androidx.annotation.MainThread
 import androidx.lifecycle.LiveData
@@ -6,12 +6,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
-import com.gaboardi.githubtest.datasource.userrepos.local.UserReposBoundaryCallback
-import com.gaboardi.githubtest.datasource.userrepos.local.UserReposLocalDataSource
-import com.gaboardi.githubtest.datasource.userrepos.remote.UserReposRemoteDataSource
+import com.gaboardi.githubtest.datasource.stargazers.local.StargazersBoundaryCallback
+import com.gaboardi.githubtest.datasource.stargazers.local.StargazersLocalDataSource
+import com.gaboardi.githubtest.datasource.stargazers.remote.StargazersRemoteDataSource
+import com.gaboardi.githubtest.db.AppDatabase
 import com.gaboardi.githubtest.model.base.Listing
 import com.gaboardi.githubtest.model.base.NetworkState
-import com.gaboardi.githubtest.model.userrepos.Repo
+import com.gaboardi.githubtest.model.stargazers.Stargazer
 import com.gaboardi.githubtest.util.AppExecutors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -21,25 +22,26 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class UserReposRepositoryImpl(
-    val userReposRemoteDataSource: UserReposRemoteDataSource,
-    val userReposLocalDataSource: UserReposLocalDataSource,
+class StargazersRepositoryImpl(
+    val userReposRemoteDataSource: StargazersRemoteDataSource,
+    val userReposLocalDataSource: StargazersLocalDataSource,
+    val appDatabase: AppDatabase,
     val appExecutors: AppExecutors
-): UserReposRepository {
-    override fun queryForRepos(user: String, pageSize: Int): Listing<Repo> {
+): StargazersRepository {
+    override fun queryForStargazers(repoFullName: String, pageSize: Int): Listing<Stargazer> {
         userReposLocalDataSource.clear()
-        val boundaryCallback = UserReposBoundaryCallback(
+        val boundaryCallback = StargazersBoundaryCallback(
             appExecutors,
             userReposRemoteDataSource,
             userReposLocalDataSource,
-            user,
+            repoFullName,
             { q, list -> saveToDb(list) },
             pageSize
         )
 
         val refreshTrigger = MutableLiveData<Unit>()
         val refreshState = Transformations.switchMap(refreshTrigger) {
-            refresh(user, pageSize)
+            refresh(repoFullName, pageSize)
         }
 
         val config = PagedList.Config.Builder()
@@ -48,7 +50,7 @@ class UserReposRepositoryImpl(
             .setPrefetchDistance(1)
             .build()
 
-        val livePagedList = userReposLocalDataSource.queryRepo(user).toLiveData(
+        val livePagedList = userReposLocalDataSource.queryStargazers(repoFullName).toLiveData(
             config = config,
             boundaryCallback = boundaryCallback
         )
@@ -74,13 +76,13 @@ class UserReposRepositoryImpl(
         MainScope().launch {
             withContext(Dispatchers.IO){
                 userReposLocalDataSource.clear()
-                userReposRemoteDataSource.queryRepos().call(query, perPage = pageSize)
-                    .enqueue(object : Callback<List<Repo>> {
-                        override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
+                userReposRemoteDataSource.getStargazers().call(query, perPage = pageSize)
+                    .enqueue(object : Callback<List<Stargazer>> {
+                        override fun onFailure(call: Call<List<Stargazer>>, t: Throwable) {
                             networkState.value = NetworkState.error(t.message)
                         }
 
-                        override fun onResponse(call: Call<List<Repo>>, response: Response<List<Repo>>) {
+                        override fun onResponse(call: Call<List<Stargazer>>, response: Response<List<Stargazer>>) {
                             appExecutors.diskIO().execute {
                                 saveToDb(response.body())
                                 networkState.postValue(NetworkState.LOADED)
@@ -92,9 +94,16 @@ class UserReposRepositoryImpl(
         return networkState
     }
 
-    private fun saveToDb(repos: List<Repo>?) {
+    private fun saveToDb(repos: List<Stargazer>?) {
         repos?.let {
-            userReposLocalDataSource.insert(repos)
+            appDatabase.runInTransaction {
+                val start = userReposLocalDataSource.getNextIndex()
+                val data = repos.mapIndexed{ index, stargazer ->
+                    stargazer.callPosition = start + index
+                    stargazer
+                }
+                userReposLocalDataSource.insert(data)
+            }
         }
     }
 }

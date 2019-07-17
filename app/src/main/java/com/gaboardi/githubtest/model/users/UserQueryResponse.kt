@@ -1,4 +1,6 @@
-package com.gaboardi.githubtest.model
+package com.gaboardi.githubtest.model.users
+
+import com.gaboardi.githubtest.model.users.User
 
 data class UserQueryResponse(
     val incomplete_results: Boolean,

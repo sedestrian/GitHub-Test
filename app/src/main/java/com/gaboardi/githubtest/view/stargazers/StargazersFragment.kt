@@ -1,4 +1,4 @@
-package com.gaboardi.githubtest.view.userrepos
+package com.gaboardi.githubtest.view.stargazers
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,22 +13,23 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gaboardi.githubtest.R
-import com.gaboardi.githubtest.adapters.repos.ReposAdapter
-import com.gaboardi.githubtest.databinding.FragmentUserRepositoriesBinding
+import com.gaboardi.githubtest.adapters.stargazers.StargazersAdapter
+import com.gaboardi.githubtest.databinding.FragmentStargazersBinding
 import com.gaboardi.githubtest.model.base.NetworkState
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.SpacingItemDecorator
 import com.gaboardi.githubtest.util.px
-import com.gaboardi.githubtest.viewmodel.userrepos.UserReposViewModel
+import com.gaboardi.githubtest.viewmodel.stargazers.StargazersViewModel
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class UserRepositoriesFragment : Fragment() {
-    private val reposViewModel: UserReposViewModel by viewModel()
-    private lateinit var binding: FragmentUserRepositoriesBinding
-    private lateinit var usersAdapter: ReposAdapter
+class StargazersFragment : Fragment() {
+    private val stargazersViewModel: StargazersViewModel by viewModel()
+    private lateinit var binding: FragmentStargazersBinding
+    private lateinit var usersAdapter: StargazersAdapter
 
     private val appExecutors: AppExecutors by inject()
 
@@ -36,8 +37,8 @@ class UserRepositoriesFragment : Fragment() {
         super.onCreate(savedInstanceState)
         requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         arguments?.let {
-            val user = UserRepositoriesFragmentArgs.fromBundle(it).user
-            reposViewModel.setUser(user)
+            val fullName = StargazersFragmentArgs.fromBundle(it).repoFullName
+            stargazersViewModel.setRepoFullName(fullName)
         }
     }
 
@@ -45,35 +46,26 @@ class UserRepositoriesFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_user_repositories, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_stargazers, container, false)
         binding.lifecycleOwner = this
-        binding.viewModel = reposViewModel
+        binding.viewModel = stargazersViewModel
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        NavigationUI.setupWithNavController(binding.collapsingToolbar, binding.toolbar, findNavController())
-
-        usersAdapter = ReposAdapter(appExecutors, onCLick = {
-            it.fullName?.also { fullName ->
-                val action =
-                    UserRepositoriesFragmentDirections.actionUserRepositoriesFragmentToStargazersFragment(fullName)
-                findNavController().navigate(action)
-            }
-        }, onRetry = {
-            reposViewModel.refresh()
-        })
-        binding.repoRecycler.layoutManager = LinearLayoutManager(requireContext())
-        binding.repoRecycler.adapter = usersAdapter
-        binding.repoRecycler.addItemDecoration(SpacingItemDecorator(horizontal = 0, vertical = 16.px))
-        binding.repoRecycler.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+        usersAdapter = StargazersAdapter(appExecutors) {
+            stargazersViewModel.refresh()
+        }
+        binding.stargazersRecycler.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.stargazersRecycler.adapter = usersAdapter
+        binding.stargazersRecycler.addItemDecoration(SpacingItemDecorator(16.px, 16.px))
         observe()
         react()
     }
 
     private fun observe() {
-        reposViewModel.repos.observe(this, Observer {
+        stargazersViewModel.stargazers.observe(this, Observer {
             usersAdapter.submitList(it)
             if (it.isNotEmpty()) {
                 binding.lottie.isGone = true
@@ -83,15 +75,16 @@ class UserRepositoriesFragment : Fragment() {
                 binding.refresh.isGone = true
             }
         })
-        reposViewModel.networkState.observe(this, Observer {
+        stargazersViewModel.networkState.observe(this, Observer {
             usersAdapter.setNetworkState(it)
         })
-        reposViewModel.refreshState.observe(this, Observer {
+        stargazersViewModel.refreshState.observe(this, Observer {
             binding.refresh.isRefreshing = it == NetworkState.LOADING
         })
     }
 
     private fun react() {
-        binding.refresh.setOnRefreshListener { reposViewModel.refresh() }
+        binding.refresh.setOnRefreshListener { stargazersViewModel.refresh() }
+        binding.back.setOnClickListener { findNavController().navigateUp() }
     }
 }

@@ -1,4 +1,4 @@
-package com.gaboardi.githubtest.model
+package com.gaboardi.githubtest.model.users
 
 import androidx.recyclerview.widget.DiffUtil
 import androidx.room.Entity

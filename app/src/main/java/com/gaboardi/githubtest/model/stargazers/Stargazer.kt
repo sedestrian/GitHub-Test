@@ -1,5 +1,6 @@
 package com.gaboardi.githubtest.model.stargazers
 
+import androidx.recyclerview.widget.DiffUtil
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
@@ -38,5 +39,18 @@ data class Stargazer(
     @SerializedName("subscriptions_url")
     val subscriptionsUrl: String?,
     val type: String?,
-    val url: String?
-)
+    val url: String?,
+    var callPosition: Int
+){
+    companion object{
+        val diffItemCallback = object : DiffUtil.ItemCallback<Stargazer>() {
+            override fun areItemsTheSame(oldItem: Stargazer, newItem: Stargazer): Boolean {
+                return oldItem.id == newItem.id
+            }
+
+            override fun areContentsTheSame(oldItem: Stargazer, newItem: Stargazer): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
+}

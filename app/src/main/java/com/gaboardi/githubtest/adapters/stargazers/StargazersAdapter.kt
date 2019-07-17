@@ -1,4 +1,4 @@
-package com.gaboardi.githubtest.adapters.users
+package com.gaboardi.githubtest.adapters.stargazers
 
 import android.view.ViewGroup
 import androidx.paging.PagedListAdapter
@@ -6,16 +6,15 @@ import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.RecyclerView
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.common.NetworkStateItemViewHolder
-import com.gaboardi.githubtest.model.users.User
 import com.gaboardi.githubtest.model.base.NetworkState
+import com.gaboardi.githubtest.model.stargazers.Stargazer
 import com.gaboardi.githubtest.util.AppExecutors
 
-class UsersAdapter(
+class StargazersAdapter(
     val appExecutors: AppExecutors,
-    val onCLick: ((user: User) -> Unit)?,
     val onRetry: () -> Unit
-): PagedListAdapter<User, RecyclerView.ViewHolder>(
-    AsyncDifferConfig.Builder(User.diffItemCallback)
+): PagedListAdapter<Stargazer, RecyclerView.ViewHolder>(
+    AsyncDifferConfig.Builder(Stargazer.diffItemCallback)
         .setBackgroundThreadExecutor(appExecutors.diskIO())
         .build()
 ){
@@ -32,7 +31,7 @@ class UsersAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            R.layout.user_item -> UsersViewHolder.create(parent)
+            R.layout.user_item -> StargazersViewHolder.create(parent)
             R.layout.network_state_item -> NetworkStateItemViewHolder.create(parent, onRetry)
             else -> throw IllegalArgumentException("unknown view type $viewType")
         }
@@ -40,7 +39,7 @@ class UsersAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (getItemViewType(position)) {
-            R.layout.user_item -> (holder as UsersViewHolder).bindTo(getItem(position), onCLick)
+            R.layout.user_item -> (holder as StargazersViewHolder).bindTo(getItem(position))
             R.layout.network_state_item -> (holder as NetworkStateItemViewHolder).bindTo(
                 networkState)
         }
@@ -50,10 +49,7 @@ class UsersAdapter(
         holder: RecyclerView.ViewHolder,
         position: Int,
         payloads: MutableList<Any>) {
-        if (payloads.isNotEmpty()) {
-//            val item = getItem(position)
-//            (holder as UsersViewHolder)
-        } else {
+        if (payloads.isEmpty()) {
             onBindViewHolder(holder, position)
         }
     }
@@ -66,7 +62,6 @@ class UsersAdapter(
         val previousState = this.networkState
         val hadExtraRow = hasExtraRow()
         this.networkState = newNetworkState
-        println("adapter ${networkState?.status?.name}")
         val hasExtraRow = hasExtraRow()
         if (hadExtraRow != hasExtraRow) {
             if (hadExtraRow) {

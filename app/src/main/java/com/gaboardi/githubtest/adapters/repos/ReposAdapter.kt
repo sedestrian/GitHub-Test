@@ -40,7 +40,7 @@ class ReposAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (getItemViewType(position)) {
-            R.layout.repo_item -> (holder as ReposViewHolder).bindTo(getItem(position))
+            R.layout.repo_item -> (holder as ReposViewHolder).bindTo(getItem(position), onCLick)
             R.layout.network_state_item -> (holder as NetworkStateItemViewHolder).bindTo(
                 networkState)
         }

@@ -3,7 +3,7 @@
     <data>
         <variable
             name="user"
-            type="com.gaboardi.githubtest.model.User" />
+            type="com.gaboardi.githubtest.model.users.User" />
     </data>
     <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
