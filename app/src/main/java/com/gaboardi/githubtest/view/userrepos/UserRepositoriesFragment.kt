@@ -1,7 +1,6 @@
 package com.gaboardi.githubtest.view.userrepos
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,10 +8,11 @@ import android.view.WindowManager
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.repos.ReposAdapter
 import com.gaboardi.githubtest.databinding.FragmentUserRepositoriesBinding
@@ -21,6 +21,7 @@ import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.SpacingItemDecorator
 import com.gaboardi.githubtest.util.px
 import com.gaboardi.githubtest.viewmodel.userrepos.UserReposViewModel
+import com.google.android.material.snackbar.Snackbar
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -53,7 +54,11 @@ class UserRepositoriesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         usersAdapter = ReposAdapter(appExecutors, onCLick = {
-            //Navigation
+            it.fullName?.also { fullName ->
+                val action =
+                    UserRepositoriesFragmentDirections.actionUserRepositoriesFragmentToStargazersFragment(fullName)
+                findNavController().navigate(action)
+            }
         }, onRetry = {
             reposViewModel.refresh()
         })
@@ -68,23 +73,37 @@ class UserRepositoriesFragment : Fragment() {
     private fun observe() {
         reposViewModel.repos.observe(this, Observer {
             usersAdapter.submitList(it)
-            if(it.isNotEmpty()){
+            if (it.isNotEmpty()) {
                 binding.lottie.isGone = true
                 binding.refresh.isVisible = true
-            }else{
-                binding.lottie.isVisible = true
-                binding.refresh.isGone = true
             }
         })
         reposViewModel.networkState.observe(this, Observer {
             usersAdapter.setNetworkState(it)
+            reposViewModel.handleNetworkState(it.status)
         })
         reposViewModel.refreshState.observe(this, Observer {
             binding.refresh.isRefreshing = it == NetworkState.LOADING
+            usersAdapter.setNetworkState(it)
+            reposViewModel.handleNetworkState(it.status)
         })
+        reposViewModel.networkAvailable.observe(this, Observer {
+            if (!it)
+                showNoNetworkMessage()
+        })
+    }
+
+    private fun showNoNetworkMessage() {
+        val snack = Snackbar.make(binding.root, getString(R.string.youre_offline), Snackbar.LENGTH_INDEFINITE)
+        snack.setAction(R.string.retry) {
+            reposViewModel.refresh()
+            snack.dismiss()
+        }
+        snack.show()
     }
 
     private fun react() {
         binding.refresh.setOnRefreshListener { reposViewModel.refresh() }
+        binding.back.setOnClickListener { findNavController().navigateUp() }
     }
 }

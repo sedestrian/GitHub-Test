@@ -15,8 +15,8 @@ class ReposViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val description: TextView = itemView.findViewById(R.id.description)
     val stargazers: TextView = itemView.findViewById(R.id.stargazers)
 
-    fun bindTo(user: Repo?) {
-        user?.let {
+    fun bindTo(repo: Repo?, onCLick: ((user: Repo) -> Unit)?) {
+        repo?.let {
             title.text = it.name
             if(it.description.isNullOrBlank()){
                 description.isGone = true
@@ -25,6 +25,7 @@ class ReposViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
                 description.isVisible = true
             }
             stargazers.text = it.stargazersCount.toString()
+            itemView.setOnClickListener { view -> onCLick?.invoke(it) }
         }
     }
 

@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.bumptech.glide.request.target.ViewTarget
 import com.gaboardi.githubtest.BuildConfig.BASE_URL
 import com.gaboardi.githubtest.db.AppDatabase
+import com.gaboardi.githubtest.di.contextModule
 import com.gaboardi.githubtest.di.dataModule
 import com.gaboardi.githubtest.di.netModule
 import com.google.android.material.tabs.TabLayout
@@ -30,7 +31,7 @@ class App : Application() {
         startKoin {
             androidLogger()
             androidContext(this@App)
-            modules(listOf(netModule(BASE_URL), dataModule))
+            modules(listOf(netModule(BASE_URL), dataModule, contextModule(this@App)))
         }
     }
 

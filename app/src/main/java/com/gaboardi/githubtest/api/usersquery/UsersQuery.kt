@@ -1,8 +1,7 @@
 package com.gaboardi.githubtest.api.usersquery
 
 import androidx.annotation.IntRange
-import com.gaboardi.githubtest.model.UserQueryBody
-import com.gaboardi.githubtest.model.UserQueryResponse
+import com.gaboardi.githubtest.model.users.UserQueryResponse
 import retrofit2.Call
 import retrofit2.http.*
 

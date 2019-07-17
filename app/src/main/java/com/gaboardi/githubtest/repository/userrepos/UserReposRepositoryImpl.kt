@@ -60,6 +60,7 @@ class UserReposRepositoryImpl(
                 boundaryCallback.helper.retryAllFailed()
             },
             refresh = {
+                boundaryCallback.resetErrors()
                 refreshTrigger.value = null
             },
             refreshState = refreshState

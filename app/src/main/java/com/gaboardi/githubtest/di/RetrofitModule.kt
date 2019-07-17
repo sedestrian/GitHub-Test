@@ -1,6 +1,7 @@
 package com.gaboardi.githubtest.di
 
 import com.gaboardi.githubtest.BuildConfig
+import com.gaboardi.githubtest.api.stargazers.Stargazers
 import com.gaboardi.githubtest.api.userrepos.UserRepos
 import com.gaboardi.githubtest.api.usersquery.UsersQuery
 import com.gaboardi.githubtest.util.AppExecutors
@@ -33,5 +34,6 @@ fun netModule(baseUrl: String, timeout: Long = 30) = module {
     }
     single<UsersQuery> { get<Retrofit.Builder>().baseUrl(baseUrl).build().create(UsersQuery::class.java) }
     single<UserRepos> { get<Retrofit.Builder>().baseUrl(baseUrl).build().create(UserRepos::class.java) }
+    single<Stargazers> { get<Retrofit.Builder>().baseUrl(baseUrl).build().create(Stargazers::class.java) }
     single<AppExecutors> { AppExecutors() }
 }

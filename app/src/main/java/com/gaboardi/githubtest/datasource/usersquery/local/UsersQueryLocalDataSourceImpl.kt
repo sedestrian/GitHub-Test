@@ -1,9 +1,8 @@
 package com.gaboardi.githubtest.datasource.usersquery.local
 
-import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import com.gaboardi.githubtest.dao.usersquery.UsersQueryDao
-import com.gaboardi.githubtest.model.User
+import com.gaboardi.githubtest.model.users.User
 
 class UsersQueryLocalDataSourceImpl(
     val usersQueryDao: UsersQueryDao

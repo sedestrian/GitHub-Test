@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.RecyclerView
 import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.common.NetworkStateItemViewHolder
-import com.gaboardi.githubtest.model.User
+import com.gaboardi.githubtest.model.users.User
 import com.gaboardi.githubtest.model.base.NetworkState
 import com.gaboardi.githubtest.util.AppExecutors
 
@@ -43,18 +43,6 @@ class UsersAdapter(
             R.layout.user_item -> (holder as UsersViewHolder).bindTo(getItem(position), onCLick)
             R.layout.network_state_item -> (holder as NetworkStateItemViewHolder).bindTo(
                 networkState)
-        }
-    }
-
-    override fun onBindViewHolder(
-        holder: RecyclerView.ViewHolder,
-        position: Int,
-        payloads: MutableList<Any>) {
-        if (payloads.isNotEmpty()) {
-//            val item = getItem(position)
-//            (holder as UsersViewHolder)
-        } else {
-            onBindViewHolder(holder, position)
         }
     }
 

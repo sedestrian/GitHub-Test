@@ -2,8 +2,8 @@ package com.gaboardi.githubtest.datasource.usersquery.local
 
 import androidx.paging.PagedList
 import com.gaboardi.githubtest.datasource.usersquery.remote.UsersQueryRemoteDataSource
-import com.gaboardi.githubtest.model.User
-import com.gaboardi.githubtest.model.UserQueryResponse
+import com.gaboardi.githubtest.model.users.User
+import com.gaboardi.githubtest.model.users.UserQueryResponse
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.PagingRequestHelper
 import com.gaboardi.githubtest.util.createStatusLiveData
@@ -11,7 +11,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import kotlin.math.ceil
-import kotlin.math.floor
 
 class UsersQueryBoundaryCallback(
     val appExecutors: AppExecutors,
@@ -25,7 +24,7 @@ class UsersQueryBoundaryCallback(
     val networkState = helper.createStatusLiveData()
     var loadingEnd = false
 
-    fun resetErrors(){
+    fun resetErrors() {
         helper.clearRequestQueue()
     }
 
@@ -71,8 +70,13 @@ class UsersQueryBoundaryCallback(
                 call: Call<UserQueryResponse>,
                 response: Response<UserQueryResponse>
             ) {
-                println("Success")
-                insertItemsIntoDb(response, it)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null && body.items.isNotEmpty()) {
+                        println("Success")
+                        insertItemsIntoDb(response, it)
+                    } else it.recordFailure(Throwable("Body empty or error"))
+                } else it.recordFailure(Throwable("Call not successful"))
             }
         }
     }

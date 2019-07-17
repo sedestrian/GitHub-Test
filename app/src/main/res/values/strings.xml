@@ -6,4 +6,6 @@
     <string name="search">Cerca</string>
     <string name="retry">Retry</string>
     <string name="youre_offline">Sei offline</string>
+    <string name="repos">Repositories</string>
+    <string name="stargazers">Stargazers</string>
 </resources>

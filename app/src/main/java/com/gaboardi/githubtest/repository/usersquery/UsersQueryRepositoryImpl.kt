@@ -9,8 +9,8 @@ import androidx.paging.toLiveData
 import com.gaboardi.githubtest.datasource.usersquery.local.UsersQueryBoundaryCallback
 import com.gaboardi.githubtest.datasource.usersquery.local.UsersQueryLocalDataSource
 import com.gaboardi.githubtest.datasource.usersquery.remote.UsersQueryRemoteDataSource
-import com.gaboardi.githubtest.model.User
-import com.gaboardi.githubtest.model.UserQueryResponse
+import com.gaboardi.githubtest.model.users.User
+import com.gaboardi.githubtest.model.users.UserQueryResponse
 import com.gaboardi.githubtest.model.base.Listing
 import com.gaboardi.githubtest.model.base.NetworkState
 import com.gaboardi.githubtest.util.AppExecutors

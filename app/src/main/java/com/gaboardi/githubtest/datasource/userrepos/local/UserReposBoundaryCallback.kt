@@ -2,9 +2,6 @@ package com.gaboardi.githubtest.datasource.userrepos.local
 
 import androidx.paging.PagedList
 import com.gaboardi.githubtest.datasource.userrepos.remote.UserReposRemoteDataSource
-import com.gaboardi.githubtest.datasource.usersquery.remote.UsersQueryRemoteDataSource
-import com.gaboardi.githubtest.model.User
-import com.gaboardi.githubtest.model.UserQueryResponse
 import com.gaboardi.githubtest.model.userrepos.Repo
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.PagingRequestHelper
@@ -13,7 +10,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import kotlin.math.ceil
-import kotlin.math.floor
 
 class UserReposBoundaryCallback(
     val appExecutors: AppExecutors,
@@ -26,6 +22,10 @@ class UserReposBoundaryCallback(
     val helper = PagingRequestHelper(appExecutors.diskIO())
     val networkState = helper.createStatusLiveData()
     var loadingEnd = false
+
+    fun resetErrors(){
+        helper.clearRequestQueue()
+    }
 
     override fun onZeroItemsLoaded() {
         helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) { callback ->
