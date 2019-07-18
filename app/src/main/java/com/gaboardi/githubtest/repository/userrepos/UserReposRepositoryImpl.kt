@@ -12,6 +12,7 @@ import com.gaboardi.githubtest.datasource.userrepos.remote.UserReposRemoteDataSo
 import com.gaboardi.githubtest.model.base.Listing
 import com.gaboardi.githubtest.model.base.NetworkState
 import com.gaboardi.githubtest.model.userrepos.Repo
+import com.gaboardi.githubtest.model.userrepos.RepoResult
 import com.gaboardi.githubtest.util.AppExecutors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -75,16 +76,21 @@ class UserReposRepositoryImpl(
             withContext(Dispatchers.IO){
                 userReposLocalDataSource.clear()
                 userReposRemoteDataSource.queryRepos().call(query, perPage = pageSize)
-                    .enqueue(object : Callback<List<Repo>> {
-                        override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
+                    .enqueue(object : Callback<RepoResult> {
+                        override fun onFailure(call: Call<RepoResult>, t: Throwable) {
                             networkState.value = NetworkState.error(t.message)
                         }
 
-                        override fun onResponse(call: Call<List<Repo>>, response: Response<List<Repo>>) {
-                            appExecutors.diskIO().execute {
-                                saveToDb(response.body())
-                                networkState.postValue(NetworkState.LOADED)
-                            }
+                        override fun onResponse(call: Call<RepoResult>, response: Response<RepoResult>) {
+                            if (response.isSuccessful) {
+                                val body = response.body()
+                                if (body != null && body.repos.isNotEmpty()) {
+                                    appExecutors.diskIO().execute {
+                                        saveToDb(response.body()?.repos)
+                                        networkState.postValue(NetworkState.LOADED)
+                                    }
+                                } else networkState.postValue(NetworkState.error("Body empty or error"))
+                            } else networkState.postValue(NetworkState.error("Call not successful"))
                         }
                     })
             }

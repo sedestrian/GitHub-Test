@@ -1,10 +1,6 @@
 package com.gaboardi.githubtest.view.usersquery
 
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.os.Build
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.EditorInfo
@@ -19,7 +15,6 @@ import com.gaboardi.githubtest.R
 import com.gaboardi.githubtest.adapters.users.UsersAdapter
 import com.gaboardi.githubtest.databinding.FragmentUsersQueryBinding
 import com.gaboardi.githubtest.model.base.NetworkState
-import com.gaboardi.githubtest.model.base.Status
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.SpacingItemDecorator
 import com.gaboardi.githubtest.util.dismissKeyboard
@@ -78,7 +73,7 @@ class UsersQueryFragment : Fragment() {
             if (it.isNotEmpty() || (query != null && query.isNotBlank())) {
                 binding.lottie.isGone = true
                 binding.refresh.isVisible = true
-            } else if(query.isNullOrBlank()){
+            } else if (query.isNullOrBlank()) {
                 binding.lottie.isVisible = true
                 binding.refresh.isGone = true
             }
@@ -89,11 +84,12 @@ class UsersQueryFragment : Fragment() {
         })
         usersViewModel.refreshState.observe(this, Observer {
             binding.refresh.isRefreshing = it == NetworkState.LOADING
-            usersAdapter.setNetworkState(it)
+            if (it != NetworkState.LOADING)
+                usersAdapter.setNetworkState(it)
             usersViewModel.handleNetworkState(it.status)
         })
         usersViewModel.networkAvailable.observe(this, Observer {
-            if(!it){
+            if (!it) {
                 showNoNetworkMessage()
             }
         })

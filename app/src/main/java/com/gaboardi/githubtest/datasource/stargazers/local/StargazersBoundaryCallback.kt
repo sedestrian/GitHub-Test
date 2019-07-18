@@ -3,6 +3,7 @@ package com.gaboardi.githubtest.datasource.stargazers.local
 import androidx.paging.PagedList
 import com.gaboardi.githubtest.datasource.stargazers.remote.StargazersRemoteDataSource
 import com.gaboardi.githubtest.model.stargazers.Stargazer
+import com.gaboardi.githubtest.model.stargazers.StargazerResult
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.PagingRequestHelper
 import com.gaboardi.githubtest.util.createStatusLiveData
@@ -43,21 +44,21 @@ class StargazersBoundaryCallback(
     }
 
     private fun insertItemsIntoDb(
-        response: Response<List<Stargazer>>,
+        items: List<Stargazer>,
         it: PagingRequestHelper.Request.Callback
     ) {
         appExecutors.diskIO().execute {
-            handleResponse(repoFullName, response.body())
+            handleResponse(repoFullName, items)
             it.recordSuccess()
             loadingEnd = false
         }
     }
 
     private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback)
-            : Callback<List<Stargazer>> {
-        return object : Callback<List<Stargazer>> {
+            : Callback<StargazerResult> {
+        return object : Callback<StargazerResult> {
             override fun onFailure(
-                call: Call<List<Stargazer>>,
+                call: Call<StargazerResult>,
                 t: Throwable
             ) {
                 println("Failure")
@@ -66,11 +67,15 @@ class StargazersBoundaryCallback(
             }
 
             override fun onResponse(
-                call: Call<List<Stargazer>>,
-                response: Response<List<Stargazer>>
+                call: Call<StargazerResult>,
+                response: Response<StargazerResult>
             ) {
-                println("Success")
-                insertItemsIntoDb(response, it)
+                if(response.isSuccessful){
+                    val body = response.body()
+                    if(body != null && body.users.isNotEmpty() && body.message == null){
+                        insertItemsIntoDb(body.users, it)
+                    }else it.recordFailure(Throwable("Body empty or error"))
+                }else it.recordFailure(Throwable("Call not successful"))
             }
         }
     }

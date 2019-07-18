@@ -13,6 +13,7 @@ import com.gaboardi.githubtest.db.AppDatabase
 import com.gaboardi.githubtest.model.base.Listing
 import com.gaboardi.githubtest.model.base.NetworkState
 import com.gaboardi.githubtest.model.stargazers.Stargazer
+import com.gaboardi.githubtest.model.stargazers.StargazerResult
 import com.gaboardi.githubtest.util.AppExecutors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -77,16 +78,21 @@ class StargazersRepositoryImpl(
             withContext(Dispatchers.IO){
                 userReposLocalDataSource.clear()
                 userReposRemoteDataSource.getStargazers().call(query, perPage = pageSize)
-                    .enqueue(object : Callback<List<Stargazer>> {
-                        override fun onFailure(call: Call<List<Stargazer>>, t: Throwable) {
+                    .enqueue(object : Callback<StargazerResult> {
+                        override fun onFailure(call: Call<StargazerResult>, t: Throwable) {
                             networkState.value = NetworkState.error(t.message)
                         }
 
-                        override fun onResponse(call: Call<List<Stargazer>>, response: Response<List<Stargazer>>) {
-                            appExecutors.diskIO().execute {
-                                saveToDb(response.body())
-                                networkState.postValue(NetworkState.LOADED)
-                            }
+                        override fun onResponse(call: Call<StargazerResult>, response: Response<StargazerResult>) {
+                            if (response.isSuccessful) {
+                                val body = response.body()
+                                if (body != null && body.users.isNotEmpty()) {
+                                    appExecutors.diskIO().execute {
+                                        saveToDb(response.body()?.users)
+                                        networkState.postValue(NetworkState.LOADED)
+                                    }
+                                } else networkState.postValue(NetworkState.error("Body empty or error"))
+                            } else networkState.postValue(NetworkState.error("Call not successful"))
                         }
                     })
             }

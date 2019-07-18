@@ -3,6 +3,7 @@ package com.gaboardi.githubtest.datasource.userrepos.local
 import androidx.paging.PagedList
 import com.gaboardi.githubtest.datasource.userrepos.remote.UserReposRemoteDataSource
 import com.gaboardi.githubtest.model.userrepos.Repo
+import com.gaboardi.githubtest.model.userrepos.RepoResult
 import com.gaboardi.githubtest.util.AppExecutors
 import com.gaboardi.githubtest.util.PagingRequestHelper
 import com.gaboardi.githubtest.util.createStatusLiveData
@@ -21,7 +22,6 @@ class UserReposBoundaryCallback(
 ) : PagedList.BoundaryCallback<Repo>() {
     val helper = PagingRequestHelper(appExecutors.diskIO())
     val networkState = helper.createStatusLiveData()
-    var loadingEnd = false
 
     fun resetErrors(){
         helper.clearRequestQueue()
@@ -43,34 +43,36 @@ class UserReposBoundaryCallback(
     }
 
     private fun insertItemsIntoDb(
-        response: Response<List<Repo>>,
+        items: List<Repo>,
         it: PagingRequestHelper.Request.Callback
     ) {
         appExecutors.diskIO().execute {
-            handleResponse(user, response.body())
+            handleResponse(user, items)
             it.recordSuccess()
-            loadingEnd = false
         }
     }
 
     private fun createWebserviceCallback(it: PagingRequestHelper.Request.Callback)
-            : Callback<List<Repo>> {
-        return object : Callback<List<Repo>> {
+            : Callback<RepoResult> {
+        return object : Callback<RepoResult> {
             override fun onFailure(
-                call: Call<List<Repo>>,
+                call: Call<RepoResult>,
                 t: Throwable
             ) {
                 println("Failure")
                 it.recordFailure(t)
-                loadingEnd = false
             }
 
             override fun onResponse(
-                call: Call<List<Repo>>,
-                response: Response<List<Repo>>
+                call: Call<RepoResult>,
+                response: Response<RepoResult>
             ) {
-                println("Success")
-                insertItemsIntoDb(response, it)
+                if(response.isSuccessful){
+                    val body = response.body()
+                    if(body != null && body.repos.isNotEmpty() && body.message == null){
+                        insertItemsIntoDb(body.repos, it)
+                    }else it.recordFailure(Throwable("Body empty or error"))
+                }else it.recordFailure(Throwable("Call not successful"))
             }
         }
     }

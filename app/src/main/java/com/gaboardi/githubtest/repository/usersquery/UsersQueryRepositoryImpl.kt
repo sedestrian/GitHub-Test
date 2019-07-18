@@ -9,10 +9,10 @@ import androidx.paging.toLiveData
 import com.gaboardi.githubtest.datasource.usersquery.local.UsersQueryBoundaryCallback
 import com.gaboardi.githubtest.datasource.usersquery.local.UsersQueryLocalDataSource
 import com.gaboardi.githubtest.datasource.usersquery.remote.UsersQueryRemoteDataSource
-import com.gaboardi.githubtest.model.users.User
-import com.gaboardi.githubtest.model.users.UserQueryResponse
 import com.gaboardi.githubtest.model.base.Listing
 import com.gaboardi.githubtest.model.base.NetworkState
+import com.gaboardi.githubtest.model.users.User
+import com.gaboardi.githubtest.model.users.UserQueryResponse
 import com.gaboardi.githubtest.util.AppExecutors
 import retrofit2.Call
 import retrofit2.Callback
@@ -75,10 +75,15 @@ class UsersQueryRepositoryImpl(
                 }
 
                 override fun onResponse(call: Call<UserQueryResponse>, response: Response<UserQueryResponse>) {
-                    appExecutors.diskIO().execute {
-                        saveToDb(response.body()?.items)
-                        networkState.postValue(NetworkState.LOADED)
-                    }
+                    if (response.isSuccessful) {
+                        val body = response.body()
+                        if (body != null && body.items.isNotEmpty()) {
+                            appExecutors.diskIO().execute {
+                                saveToDb(response.body()?.items)
+                                networkState.postValue(NetworkState.LOADED)
+                            }
+                        } else networkState.postValue(NetworkState.error("Body empty or error"))
+                    } else networkState.postValue(NetworkState.error("Call not successful"))
                 }
             })
         return networkState

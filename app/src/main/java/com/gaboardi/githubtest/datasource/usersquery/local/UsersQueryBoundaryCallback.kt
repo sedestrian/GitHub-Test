@@ -29,7 +29,9 @@ class UsersQueryBoundaryCallback(
     }
 
     override fun onZeroItemsLoaded() {
+        println("Zero items loaded")
         helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) { callback ->
+            println("Querying users")
             service.queryUsers().call(query, perPage = networkPageSize).enqueue(createWebserviceCallback(callback))
         }
     }
@@ -73,7 +75,6 @@ class UsersQueryBoundaryCallback(
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null && body.items.isNotEmpty()) {
-                        println("Success")
                         insertItemsIntoDb(response, it)
                     } else it.recordFailure(Throwable("Body empty or error"))
                 } else it.recordFailure(Throwable("Call not successful"))

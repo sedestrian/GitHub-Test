@@ -84,7 +84,8 @@ class UserRepositoriesFragment : Fragment() {
         })
         reposViewModel.refreshState.observe(this, Observer {
             binding.refresh.isRefreshing = it == NetworkState.LOADING
-            usersAdapter.setNetworkState(it)
+            if (it != NetworkState.LOADING)
+                usersAdapter.setNetworkState(it)
             reposViewModel.handleNetworkState(it.status)
         })
         reposViewModel.networkAvailable.observe(this, Observer {

@@ -76,7 +76,8 @@ class StargazersFragment : Fragment() {
         })
         stargazersViewModel.refreshState.observe(this, Observer {
             binding.refresh.isRefreshing = it == NetworkState.LOADING
-            usersAdapter.setNetworkState(it)
+            if (it != NetworkState.LOADING)
+                usersAdapter.setNetworkState(it)
             stargazersViewModel.handleNetworkState(it.status)
         })
         stargazersViewModel.networkAvailable.observe(this, Observer {

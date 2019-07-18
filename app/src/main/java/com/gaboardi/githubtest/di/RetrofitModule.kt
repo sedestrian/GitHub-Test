@@ -4,6 +4,8 @@ import com.gaboardi.githubtest.BuildConfig
 import com.gaboardi.githubtest.api.stargazers.Stargazers
 import com.gaboardi.githubtest.api.userrepos.UserRepos
 import com.gaboardi.githubtest.api.usersquery.UsersQuery
+import com.gaboardi.githubtest.model.stargazers.StargazerResult
+import com.gaboardi.githubtest.model.userrepos.RepoResult
 import com.gaboardi.githubtest.util.AppExecutors
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -28,9 +30,13 @@ fun netModule(baseUrl: String, timeout: Long = 30) = module {
         builder.build()
     }
     single {
+        val builder = GsonBuilder()
+        builder.registerTypeAdapterFactory(RepoResult.AdapterFactory)
+        builder.registerTypeAdapterFactory(StargazerResult.AdapterFactory)
+        val gson = builder.create()
         Retrofit.Builder()
             .client(get())
-            .addConverterFactory(GsonConverterFactory.create(get()))
+            .addConverterFactory(GsonConverterFactory.create(gson))
     }
     single<UsersQuery> { get<Retrofit.Builder>().baseUrl(baseUrl).build().create(UsersQuery::class.java) }
     single<UserRepos> { get<Retrofit.Builder>().baseUrl(baseUrl).build().create(UserRepos::class.java) }
