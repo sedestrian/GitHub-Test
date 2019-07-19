@@ -77,7 +77,7 @@ class UsersQueryRepositoryImpl(
                 override fun onResponse(call: Call<UserQueryResponse>, response: Response<UserQueryResponse>) {
                     if (response.isSuccessful) {
                         val body = response.body()
-                        if (body != null && body.items.isNotEmpty()) {
+                        if (body != null) {
                             appExecutors.diskIO().execute {
                                 saveToDb(response.body()?.items)
                                 networkState.postValue(NetworkState.LOADED)

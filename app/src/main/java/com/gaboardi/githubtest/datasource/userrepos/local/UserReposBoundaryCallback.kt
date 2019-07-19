@@ -69,7 +69,7 @@ class UserReposBoundaryCallback(
             ) {
                 if(response.isSuccessful){
                     val body = response.body()
-                    if(body != null && body.repos.isNotEmpty() && body.message == null){
+                    if(body != null && body.message == null){
                         insertItemsIntoDb(body.repos, it)
                     }else it.recordFailure(Throwable("Body empty or error"))
                 }else it.recordFailure(Throwable("Call not successful"))

@@ -86,7 +86,7 @@ class StargazersRepositoryImpl(
                         override fun onResponse(call: Call<StargazerResult>, response: Response<StargazerResult>) {
                             if (response.isSuccessful) {
                                 val body = response.body()
-                                if (body != null && body.users.isNotEmpty()) {
+                                if (body != null) {
                                     appExecutors.diskIO().execute {
                                         saveToDb(response.body()?.users)
                                         networkState.postValue(NetworkState.LOADED)

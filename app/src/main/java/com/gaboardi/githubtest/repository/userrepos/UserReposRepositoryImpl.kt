@@ -84,7 +84,7 @@ class UserReposRepositoryImpl(
                         override fun onResponse(call: Call<RepoResult>, response: Response<RepoResult>) {
                             if (response.isSuccessful) {
                                 val body = response.body()
-                                if (body != null && body.repos.isNotEmpty()) {
+                                if (body != null) {
                                     appExecutors.diskIO().execute {
                                         saveToDb(response.body()?.repos)
                                         networkState.postValue(NetworkState.LOADED)

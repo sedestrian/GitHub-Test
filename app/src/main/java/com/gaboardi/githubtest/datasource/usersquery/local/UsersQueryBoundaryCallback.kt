@@ -74,7 +74,7 @@ class UsersQueryBoundaryCallback(
             ) {
                 if (response.isSuccessful) {
                     val body = response.body()
-                    if (body != null && body.items.isNotEmpty()) {
+                    if (body != null) {
                         insertItemsIntoDb(response, it)
                     } else it.recordFailure(Throwable("Body empty or error"))
                 } else it.recordFailure(Throwable("Call not successful"))

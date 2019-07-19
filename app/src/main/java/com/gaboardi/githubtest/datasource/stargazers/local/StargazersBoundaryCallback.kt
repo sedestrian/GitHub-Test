@@ -72,7 +72,7 @@ class StargazersBoundaryCallback(
             ) {
                 if(response.isSuccessful){
                     val body = response.body()
-                    if(body != null && body.users.isNotEmpty() && body.message == null){
+                    if(body != null && body.message == null){
                         insertItemsIntoDb(body.users, it)
                     }else it.recordFailure(Throwable("Body empty or error"))
                 }else it.recordFailure(Throwable("Call not successful"))
